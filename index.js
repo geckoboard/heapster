@@ -54,6 +54,7 @@ function listen (tabs) {
   }
 
   function write () {
+    gc();
     if (i > 50) {
       i = 0;
       charm.reset();
@@ -68,6 +69,10 @@ function listen (tabs) {
     label = pad(label, cols + 20);
     charm.write(label);
     lastHeap = heapSize;
+  }
+
+  function gc () {
+    socket.send(JSON.stringify({ id: ++i, method: 'HeapProfiler.collectGarbage' }));
   }
 
   setInterval(write, 500);
