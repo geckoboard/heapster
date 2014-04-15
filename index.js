@@ -19,24 +19,25 @@ var PAGE = process.argv[2],
     '--start-maximized',
     '--remote-debugging-port=9222'
   ],
-  charm = require('charm')(),
   chrome = spawn(chromeExecutable, args);
-
-charm.pipe(process.stdout);
-charm.reset();
 
 function poll () {
   request('http://localhost:9222/json', function (err, res, body) {
-    if (err) setTimeout(poll, 100);
-    else listen(JSON.parse(body));
+    if (err || !findTab(body)) setTimeout(poll, 100);
+    else listen(findTab(body));
   });
 }
 
-function listen (tabs) {
-  var heapSize = 0,
-      lastHeap = 0,
+function findTab(body) {
+  var tabs = JSON.parse(body);
+  return _.find(tabs, { url: PAGE });
+}
+
+function listen (tab) {
+  var heapAfterGC = [],
+      heapSize = 0,
       i = 0,
-      socketUrl = _.find(tabs, { url: PAGE }).webSocketDebuggerUrl,
+      socketUrl = tab.webSocketDebuggerUrl,
       socket = new Socket(socketUrl);
 
   socket.onmessage = function (message) {
@@ -44,9 +45,12 @@ function listen (tabs) {
     if (data.params && data.params.record && data.params.record.usedHeapSizeDelta) {
       logHeap(data.params.record.usedHeapSizeDelta);
     }
+    if (data.id > 1) heapAfterGC.push(heapSize);
+    if (heapAfterGC.length == 2) write();
   };
+
   socket.on('open', function () {
-    socket.send(JSON.stringify({ id: 1, method: 'Timeline.start' }));
+    socket.send(JSON.stringify({ id: ++i, method: 'Timeline.start' }));
   });
 
   function logHeap (delta) {
@@ -54,35 +58,19 @@ function listen (tabs) {
   }
 
   function write () {
-    gc();
-    if (i > 50) {
-      i = 0;
-      charm.reset();
-    }
-    charm.position(0, ++i);
-    var cols = Math.round((50 / 25e6) * heapSize);
-    var colour = 'yellow';
-    if (lastHeap > heapSize) colour = 'green';
-    if (lastHeap < heapSize) colour = 'red';
-    charm.background(colour);
-    label = heapSize + ' (' + (heapSize - lastHeap) + ')';
-    label = pad(label, cols + 20);
-    charm.write(label);
-    lastHeap = heapSize;
+    console.log(heapSize);
+    console.log(heapAfterGC[0] - heapAfterGC[1]);
+    chrome.kill();
+    process.exit(0);
   }
 
   function gc () {
     socket.send(JSON.stringify({ id: ++i, method: 'HeapProfiler.collectGarbage' }));
   }
 
-  setInterval(write, 500);
-}
 
-function pad (str, length) {
-  var add = length - str.length;
-  add = add > 0 ? add : 0;
-  return str + (new Array(add)).join(' ');
+  setTimeout(gc, 5e3); // Ignore the first 5 seconds of spin up
+  setTimeout(gc, 10e3); // Finish after 10 seconds
 }
-
 
 poll();
