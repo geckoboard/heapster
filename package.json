@@ -8,5 +8,8 @@
   },
   "devDependencies": {
     "mocha": "^1.18.2"
+  },
+  "bin": {
+    "heapster": "./bin/heapster"
   }
 }

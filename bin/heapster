@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+
+if (!process.argv[2]) {
+  console.error('You must supply a page to profile');
+  return;
+}
+var heapster = require('../index'),
+    page = process.argv[2];
+
+heapster(page);

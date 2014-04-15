@@ -19,8 +19,8 @@ describe('heapster', function () {
 
   it('outputs the final heapsize and heap increase', function (done) {
     this.timeout(12e3);
-    exec('node ' + __dirname + '/../index.js http://localhost:9223/', function (err, out) {
-      assert.ok(out.match(/^\d{6}\n\d{6}\n$/), out.split('\n').join(' ') + 'should be heap size and heap increase');
+    exec('./bin/heapster http://localhost:9223/', function (err, out) {
+      assert.ok(out.match(/^Heap: \d{6}\nIncrease: \d{6}\n$/), out.split('\n').join(' ') + 'should be heap size and heap increase');
       done();
     });
   });
