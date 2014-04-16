@@ -1,5 +1,5 @@
 
-module.exports = function heapster (page) {
+module.exports = function heapster (page, callback) {
   var _ = require('lodash'),
     request = require('request'),
     Socket = require('ws'),
@@ -16,10 +16,6 @@ module.exports = function heapster (page) {
       '--remote-debugging-port=9222'
     ],
     chrome = spawn(chromeExecutable, args);
-
-  process.on('exit', function () {
-    chrome.kill();
-  });
 
   function poll () {
     request('http://localhost:9222/json', function (err, res, body) {
@@ -58,9 +54,11 @@ module.exports = function heapster (page) {
     }
 
     function write () {
-      console.log('Heap: ' + heapSize);
-      console.log('Increase: ' + (heapAfterGC[0] - heapAfterGC[1]));
-      process.exit(0);
+      chrome.kill();
+      callback(null, {
+        heap: heapSize,
+        increase: heapAfterGC[0] - heapAfterGC[1]
+      });
     }
 
     function gc () {

@@ -7,4 +7,8 @@ if (!process.argv[2]) {
 var heapster = require('../index'),
     page = process.argv[2];
 
-heapster(page);
+heapster(page, function (err, size) {
+  console.log('Heap: ' + size.heap);
+  console.log('Increase: ' + size.increase);
+  process.exit(0);
+});
