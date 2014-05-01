@@ -3,7 +3,12 @@ module.exports = function heapster (page, callback) {
   var _ = require('lodash'),
     request = require('request'),
     Socket = require('ws'),
-    chromeExecutable = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    fs = require('fs'),
+    chromeExecutable = _.find([
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/chromium'
+    ], fs.existsSync),
     spawn = require('child_process').spawn,
     args = [
       page,

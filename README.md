@@ -1,6 +1,6 @@
 # Heapster.js
 
-Monitor changes in heap size via the Chrome remote debugging API. OSX only at the moment.
+Monitor changes in heap size via the Chrome remote debugging API.
 
 Note: Make sure Chrome is closed before starting a run
 
